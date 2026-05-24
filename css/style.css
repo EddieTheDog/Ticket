@@ -163,36 +163,57 @@ body {
 
 }
 
-.offense-card h3,
-.ticket-card h3 {
+.ticket-level {
 
-  margin-bottom: 8px;
+  display: inline-block;
 
-}
+  margin-bottom: 10px;
 
-.ticket-status {
+  padding: 6px 10px;
 
-  margin-top: 10px;
+  border-radius: 999px;
+
+  background: #dbeafe;
+
+  color: #1d4ed8;
+
+  font-size: 14px;
 
   font-weight: bold;
 
 }
 
-.ticket-card button {
+.ticket-status {
+
+  margin-top: 12px;
+
+  font-weight: bold;
+
+}
+
+.actions {
 
   margin-top: 14px;
 
-  border: none;
+}
 
-  background: #16a34a;
+.actions button,
+.ticket-card button,
+.modal-content button {
+
+  background: #0057b8;
 
   color: white;
+
+  border: none;
 
   padding: 10px 14px;
 
   border-radius: 10px;
 
   cursor: pointer;
+
+  margin-right: 10px;
 
 }
 
@@ -220,7 +241,7 @@ body {
 
 .modal-content {
 
-  width: 400px;
+  width: 420px;
 
   background: white;
 
@@ -248,19 +269,21 @@ body {
 
 }
 
-.modal-content button {
+.ticket-page {
 
-  background: #0057b8;
+  width: 100%;
 
-  color: white;
+  display: flex;
 
-  border: none;
+  justify-content: center;
 
-  padding: 12px;
+  padding: 40px;
 
-  border-radius: 10px;
+}
 
-  cursor: pointer;
+.large {
+
+  width: 600px;
 
 }
 
@@ -273,10 +296,6 @@ body {
   .sidebar {
     width: 100%;
     min-height: auto;
-  }
-
-  .stats {
-    flex-direction: column;
   }
 
 }
