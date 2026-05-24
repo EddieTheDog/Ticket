@@ -1,5 +1,5 @@
 const API =
-"https://home311-api.1dylanroeder1.workers.dev/";
+"https://home311-api.1dylanroeder1.workers.dev";
 
 const offenseList =
   document.getElementById(
