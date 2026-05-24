@@ -1,39 +1,59 @@
-let offenses = [
-  {
-    id: 1,
-    name: "Abandoned Item",
-    days: 3
-  },
-  {
-    id: 2,
-    name: "Hallway Obstruction",
-    days: 2
-  }
-];
-
-let tickets = [
-  {
-    id: "TK-1001",
-    offense: "Abandoned Item",
-    status: "Active"
-  }
-];
+const API =
+"https://home311-api.1dylanroeder1.workers.dev/";
 
 const offenseList =
-  document.getElementById("offenseList");
+  document.getElementById(
+    "offenseList"
+  );
 
 const ticketList =
-  document.getElementById("ticketList");
+  document.getElementById(
+    "ticketList"
+  );
 
 const activeCount =
-  document.getElementById("activeCount");
+  document.getElementById(
+    "activeCount"
+  );
 
 const resolvedCount =
-  document.getElementById("resolvedCount");
+  document.getElementById(
+    "resolvedCount"
+  );
 
-function renderOffenses() {
+const modal =
+  document.getElementById(
+    "ticketModal"
+  );
+
+const ticketOffense =
+  document.getElementById(
+    "ticketOffense"
+  );
+
+const ticketNotes =
+  document.getElementById(
+    "ticketNotes"
+  );
+
+const ticketDays =
+  document.getElementById(
+    "ticketDays"
+  );
+
+async function loadOffenses() {
+
+  const res =
+    await fetch(
+      API + "/offenses"
+    );
+
+  const offenses =
+    await res.json();
 
   offenseList.innerHTML = "";
+
+  ticketOffense.innerHTML = "";
 
   offenses.forEach((offense) => {
 
@@ -49,32 +69,28 @@ function renderOffenses() {
           ${offense.days} days
         </p>
 
-        <div class="offense-actions">
-
-          <button
-            class="edit-btn"
-            onclick="editOffense(${offense.id})"
-          >
-            Edit
-          </button>
-
-          <button
-            class="delete-btn"
-            onclick="deleteOffense(${offense.id})"
-          >
-            Delete
-          </button>
-
-        </div>
-
       </div>
+    `;
+
+    ticketOffense.innerHTML += `
+      <option>
+        ${offense.name}
+      </option>
     `;
 
   });
 
 }
 
-function renderTickets() {
+async function loadTickets() {
+
+  const res =
+    await fetch(
+      API + "/tickets"
+    );
+
+  const tickets =
+    await res.json();
 
   ticketList.innerHTML = "";
 
@@ -83,10 +99,13 @@ function renderTickets() {
 
   tickets.forEach((ticket) => {
 
-    if (ticket.status === "Active") {
-      active++;
-    } else {
+    if (
+      ticket.status ===
+      "Resolved"
+    ) {
       resolved++;
+    } else {
+      active++;
     }
 
     ticketList.innerHTML += `
@@ -97,8 +116,7 @@ function renderTickets() {
         </h3>
 
         <p>
-          Ticket ID:
-          ${ticket.id}
+          ${ticket.notes}
         </p>
 
         <div class="ticket-status">
@@ -106,15 +124,17 @@ function renderTickets() {
         </div>
 
         ${
-          ticket.status === "Active"
+          ticket.status !==
+          "Resolved"
+
           ? `
             <button
-              class="resolve-btn"
               onclick="resolveTicket('${ticket.id}')"
             >
               Mark Resolved
             </button>
           `
+
           : ""
         }
 
@@ -123,70 +143,161 @@ function renderTickets() {
 
   });
 
-  activeCount.innerText = active;
-  resolvedCount.innerText = resolved;
+  activeCount.innerText =
+    active;
+
+  resolvedCount.innerText =
+    resolved;
 
 }
 
-function editOffense(id) {
+async function addOffense() {
 
-  const offense =
-    offenses.find(o => o.id === id);
-
-  const newName =
+  const name =
     prompt(
-      "Edit offense name",
-      offense.name
+      "Offense Name"
     );
 
-  if (newName) {
-    offense.name = newName;
-    renderOffenses();
-  }
+  const days =
+    prompt(
+      "Auto Remove Days"
+    );
+
+  if (!name || !days) return;
+
+  await fetch(
+    API + "/offenses",
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type":
+          "application/json"
+      },
+
+      body: JSON.stringify({
+        name,
+        days
+      })
+    }
+  );
+
+  loadOffenses();
 
 }
 
-function deleteOffense(id) {
+async function createTicket() {
 
-  offenses =
-    offenses.filter(o => o.id !== id);
+  await fetch(
+    API + "/tickets",
+    {
+      method: "POST",
 
-  renderOffenses();
+      headers: {
+        "Content-Type":
+          "application/json"
+      },
+
+      body: JSON.stringify({
+
+        offense:
+          ticketOffense.value,
+
+        notes:
+          ticketNotes.value,
+
+        expiresInDays:
+          ticketDays.value
+
+      })
+    }
+  );
+
+  modal.classList.add(
+    "hidden"
+  );
+
+  ticketNotes.value = "";
+  ticketDays.value = "";
+
+  loadTickets();
 
 }
 
-function resolveTicket(id) {
+async function resolveTicket(id) {
 
-  const ticket =
-    tickets.find(t => t.id === id);
+  const res =
+    await fetch(
+      API + "/tickets"
+    );
 
-  ticket.status = "Resolved";
+  let tickets =
+    await res.json();
 
-  renderTickets();
+  tickets =
+    tickets.map((ticket) => {
+
+      if (ticket.id === id) {
+        ticket.status =
+          "Resolved";
+      }
+
+      return ticket;
+
+    });
+
+  await fetch(
+    API + "/saveTickets",
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type":
+          "application/json"
+      },
+
+      body: JSON.stringify(
+        tickets
+      )
+    }
+  );
+
+  loadTickets();
 
 }
 
 document
-  .getElementById("addOffenseBtn")
-  .addEventListener("click", () => {
+  .getElementById(
+    "addOffenseBtn"
+  )
+  .addEventListener(
+    "click",
+    addOffense
+  );
 
-    const name =
-      prompt("Offense Name");
+document
+  .getElementById(
+    "newTicketBtn"
+  )
+  .addEventListener(
+    "click",
+    () => {
 
-    const days =
-      prompt("Auto remove after days");
+      modal.classList.remove(
+        "hidden"
+      );
 
-    if (!name || !days) return;
+    }
+  );
 
-    offenses.push({
-      id: Date.now(),
-      name,
-      days
-    });
+document
+  .getElementById(
+    "createTicketBtn"
+  )
+  .addEventListener(
+    "click",
+    createTicket
+  );
 
-    renderOffenses();
-
-  });
-
-renderOffenses();
-renderTickets();
+loadOffenses();
+loadTickets();
