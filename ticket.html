@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Ticket
+  </title>
+
+  <link
+    rel="stylesheet"
+    href="./css/style.css"
+  >
+
+</head>
+
+<body>
+
+  <main class="ticket-page">
+
+    <div
+      class="ticket-view"
+      id="ticketView"
+    >
+    </div>
+
+  </main>
+
+  <script>
+
+    const API =
+    "https://home311-api.1dylanroeder1.workers.dev";
+
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+    const id =
+      params.get("id");
+
+    async function loadTicket() {
+
+      const res =
+        await fetch(
+          API + "/tickets"
+        );
+
+      const tickets =
+        await res.json();
+
+      const ticket =
+        tickets.find(
+          t => t.id === id
+        );
+
+      if (!ticket) return;
+
+      document
+        .getElementById(
+          "ticketView"
+        )
+        .innerHTML = `
+
+        <div class="ticket-card large">
+
+          <div class="ticket-level">
+            ${ticket.level}
+          </div>
+
+          <h1>
+            ${ticket.offense}
+          </h1>
+
+          <p>
+            ${ticket.notes}
+          </p>
+
+          <div class="ticket-status">
+            ${ticket.status}
+          </div>
+
+          ${
+            ticket.level !==
+            "Warning"
+
+            ? `
+              <p>
+                Must Be Resolved Within:
+                ${ticket.expiresInDays}
+                days
+              </p>
+            `
+
+            : ""
+          }
+
+          ${
+            ticket.status !==
+            "Resolved"
+
+            ? `
+              <label>
+
+                <input
+                  type="checkbox"
+                  id="agree"
+                >
+
+                I agree to correct this issue.
+
+              </label>
+
+              <input
+                type="text"
+                id="residentName"
+                placeholder="Your Name"
+              >
+
+              <button
+                onclick="resolveTicket()"
+              >
+                Resolve Ticket
+              </button>
+            `
+
+            : `
+              <h3>
+                Ticket Resolved
+              </h3>
+            `
+          }
+
+        </div>
+
+        `;
+
+    }
+
+    async function resolveTicket() {
+
+      const agree =
+        document.getElementById(
+          "agree"
+        ).checked;
+
+      const residentName =
+        document.getElementById(
+          "residentName"
+        ).value;
+
+      if (!agree || !residentName) {
+
+        alert(
+          "Please agree and sign."
+        );
+
+        return;
+
+      }
+
+      const res =
+        await fetch(
+          API + "/tickets"
+        );
+
+      let tickets =
+        await res.json();
+
+      tickets =
+        tickets.map((ticket) => {
+
+          if (
+            ticket.id === id
+          ) {
+
+            ticket.status =
+              "Resolved";
+
+            ticket.agreementSigned =
+              true;
+
+            ticket.residentName =
+              residentName;
+
+          }
+
+          return ticket;
+
+        });
+
+      await fetch(
+        API + "/saveTickets",
+        {
+
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+
+          body:
+            JSON.stringify(
+              tickets
+            )
+
+        }
+      );
+
+      location.reload();
+
+    }
+
+    loadTicket();
+
+  </script>
+
+</body>
+</html>
