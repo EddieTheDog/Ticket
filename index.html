@@ -3,12 +3,12 @@
 
 <head>
 
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
 
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0"
-  />
+  >
 
   <title>
     Home311
@@ -17,7 +17,7 @@
   <link
     rel="stylesheet"
     href="./css/style.css"
-  />
+  >
 
 </head>
 
@@ -40,7 +40,11 @@
       </a>
 
       <a href="#">
-        Offenses
+        Warnings
+      </a>
+
+      <a href="#">
+        Removal
       </a>
 
     </nav>
@@ -78,7 +82,7 @@
         </h2>
 
         <p>
-          Active Tickets
+          Active
         </p>
 
       </div>
@@ -146,6 +150,22 @@
         Create Ticket
       </h2>
 
+      <select id="ticketLevel">
+
+        <option>
+          Warning
+        </option>
+
+        <option>
+          Violation
+        </option>
+
+        <option>
+          Removal
+        </option>
+
+      </select>
+
       <select id="ticketOffense">
       </select>
 
@@ -157,8 +177,8 @@
       <input
         type="number"
         id="ticketDays"
-        placeholder="Remove after days"
-      />
+        placeholder="Days Until Removal"
+      >
 
       <button id="createTicketBtn">
         Create Ticket
