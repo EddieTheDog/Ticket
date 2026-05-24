@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ticket – Home311</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body style="background:#f0f4f9; min-height:100vh;">
+
+  <main class="ticket-page">
+    <div id="ticketView" style="width:100%;max-width:640px;">
+      <div class="ticket-view-card" style="padding:40px;text-align:center;color:#94a3b8;">
+        <div style="font-size:40px;margin-bottom:12px;">⏳</div>
+        Loading ticket…
+      </div>
+    </div>
+  </main>
+
+  <!-- Lightbox -->
+  <div class="lightbox hidden" id="lightbox">
+    <img id="lightboxImg" src="" alt="Photo">
+  </div>
+
+  <script>
+    const API = "https://home311-api.1dylanroeder1.workers.dev";
+
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+
+    function openLightbox(src) {
+      const lb = document.getElementById("lightbox");
+      document.getElementById("lightboxImg").src = src;
+      lb.classList.remove("hidden");
+    }
+
+    document.getElementById("lightbox").addEventListener("click", () => {
+      document.getElementById("lightbox").classList.add("hidden");
+    });
+
+    function levelBadge(level) {
+      const map = {
+        Warning: "badge-warning",
+        Violation: "badge-violation",
+        Removal: "badge-removal"
+      };
+      return `<span class="badge ${map[level] || 'badge-active'}">${level}</span>`;
+    }
+
+    function statusBadge(status) {
+      return `<span class="badge ${status === 'Resolved' ? 'badge-resolved' : 'badge-active'}">${status}</span>`;
+    }
+
+    function photosHTML(photos) {
+      if (!photos || photos.length === 0) return "";
+      const imgs = photos.map(src =>
+        `<img src="${src}" alt="Photo" onclick="openLightbox('${src}')">`
+      ).join("");
+      return `
+        <div>
+          <p style="font-weight:600;font-size:14px;margin-bottom:8px;color:#374151;">📷 Photos</p>
+          <div class="ticket-photos-full">${imgs}</div>
+        </div>
+      `;
+    }
+
+    async function loadTicket() {
+      const view = document.getElementById("ticketView");
+
+      if (!id) {
+        view.innerHTML = `<div class="ticket-view-card" style="padding:40px;text-align:center;color:#dc2626;">No ticket ID provided.</div>`;
+        return;
+      }
+
+      try {
+        const res = await fetch(API + "/tickets");
+        const tickets = await res.json();
+        const ticket = tickets.find(t => t.id === id);
+
+        if (!ticket) {
+          view.innerHTML = `<div class="ticket-view-card" style="padding:40px;text-align:center;color:#dc2626;">Ticket not found.</div>`;
+          return;
+        }
+
+        const date = ticket.createdAt
+          ? new Date(ticket.createdAt).toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" })
+          : "Unknown date";
+
+        const resolveSection = ticket.status !== "Resolved"
+          ? `
+            <div class="resolve-form">
+              <p style="font-weight:700;font-size:15px;">Resolve This Ticket</p>
+              <label>
+                <input type="checkbox" id="agree">
+                I agree to correct this issue and understand the consequences.
+              </label>
+              <input type="text" id="residentName" placeholder="Your full name (signature)">
+              <button class="btn" onclick="resolveTicket()">✅ Mark as Resolved</button>
+            </div>
+          `
+          : `
+            <div class="resolved-banner">
+              ✅ This ticket has been resolved
+              ${ticket.residentName ? `<span style="font-weight:400;font-size:13px;">— signed by ${ticket.residentName}</span>` : ""}
+            </div>
+          `;
+
+        const daysSection = ticket.level !== "Warning" && ticket.expiresInDays
+          ? `
+            <div style="background:#fff7ed;border-radius:12px;padding:14px 18px;color:#92400e;font-size:14px;">
+              ⏰ Must be resolved within <strong>${ticket.expiresInDays} days</strong>
+            </div>
+          `
+          : "";
+
+        view.innerHTML = `
+          <div class="ticket-view-card">
+            <div class="ticket-view-header">
+              ${levelBadge(ticket.level)}
+              <h1>${ticket.offense}</h1>
+              <p>Issued ${date} &nbsp;·&nbsp; ${statusBadge(ticket.status)}</p>
+            </div>
+            <div class="ticket-view-body">
+              ${ticket.notes ? `<p style="font-size:15px;line-height:1.6;color:#374151;">${ticket.notes}</p>` : ""}
+              ${photosHTML(ticket.photos)}
+              ${daysSection}
+              ${resolveSection}
+              <a href="index.html" style="color:#64748b;font-size:13px;text-decoration:none;">← Back to Dashboard</a>
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        view.innerHTML = `<div class="ticket-view-card" style="padding:40px;text-align:center;color:#dc2626;">Failed to load ticket. Check your connection.</div>`;
+      }
+    }
+
+    async function resolveTicket() {
+      const agree = document.getElementById("agree").checked;
+      const residentName = document.getElementById("residentName").value.trim();
+
+      if (!agree || !residentName) {
+        alert("Please check the agreement box and enter your name.");
+        return;
+      }
+
+      try {
+        const res = await fetch(API + "/tickets");
+        let tickets = await res.json();
+
+        tickets = tickets.map(ticket => {
+          if (ticket.id === id) {
+            ticket.status = "Resolved";
+            ticket.agreementSigned = true;
+            ticket.residentName = residentName;
+            ticket.resolvedAt = Date.now();
+          }
+          return ticket;
+        });
+
+        await fetch(API + "/saveTickets", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(tickets)
+        });
+
+        location.reload();
+      } catch (err) {
+        alert("Failed to resolve ticket. Please try again.");
+      }
+    }
+
+    loadTicket();
+  </script>
+</body>
+</html>
