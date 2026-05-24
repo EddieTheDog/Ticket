@@ -1,18 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
   <meta charset="UTF-8" />
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0"
   />
 
-  <title>Home311 Dashboard</title>
+  <title>
+    Home311
+  </title>
 
   <link
     rel="stylesheet"
     href="./css/style.css"
   />
+
 </head>
 
 <body>
@@ -37,10 +43,6 @@
         Offenses
       </a>
 
-      <a href="#">
-        Archive
-      </a>
-
     </nav>
 
   </aside>
@@ -49,9 +51,17 @@
 
     <header class="topbar">
 
-      <h1>
-        Ticket Dashboard
-      </h1>
+      <div>
+
+        <h1>
+          Home311 Dashboard
+        </h1>
+
+        <p>
+          Household Item Tracking
+        </p>
+
+      </div>
 
       <button id="newTicketBtn">
         + New Ticket
@@ -62,6 +72,7 @@
     <section class="stats">
 
       <div class="stat-card">
+
         <h2 id="activeCount">
           0
         </h2>
@@ -69,9 +80,11 @@
         <p>
           Active Tickets
         </p>
+
       </div>
 
       <div class="stat-card">
+
         <h2 id="resolvedCount">
           0
         </h2>
@@ -79,11 +92,12 @@
         <p>
           Resolved
         </p>
+
       </div>
 
     </section>
 
-    <section class="offense-manager">
+    <section class="section">
 
       <div class="section-header">
 
@@ -102,7 +116,7 @@
 
     </section>
 
-    <section class="tickets">
+    <section class="section">
 
       <div class="section-header">
 
@@ -118,6 +132,41 @@
     </section>
 
   </main>
+
+  <!-- MODAL -->
+
+  <div
+    class="modal hidden"
+    id="ticketModal"
+  >
+
+    <div class="modal-content">
+
+      <h2>
+        Create Ticket
+      </h2>
+
+      <select id="ticketOffense">
+      </select>
+
+      <textarea
+        id="ticketNotes"
+        placeholder="Notes..."
+      ></textarea>
+
+      <input
+        type="number"
+        id="ticketDays"
+        placeholder="Remove after days"
+      />
+
+      <button id="createTicketBtn">
+        Create Ticket
+      </button>
+
+    </div>
+
+  </div>
 
   <script src="./js/app.js"></script>
 
