@@ -69,6 +69,22 @@ async function loadOffenses() {
           ${offense.days} days
         </p>
 
+        <div class="actions">
+
+          <button
+            onclick="editOffense('${offense.id}')"
+          >
+            Edit
+          </button>
+
+          <button
+            onclick="deleteOffense('${offense.id}')"
+          >
+            Delete
+          </button>
+
+        </div>
+
       </div>
     `;
 
@@ -123,20 +139,30 @@ async function loadTickets() {
           ${ticket.status}
         </div>
 
-        ${
-          ticket.status !==
-          "Resolved"
+        <div class="actions">
 
-          ? `
-            <button
-              onclick="resolveTicket('${ticket.id}')"
-            >
-              Mark Resolved
-            </button>
-          `
+          ${
+            ticket.status !==
+            "Resolved"
 
-          : ""
-        }
+            ? `
+              <button
+                onclick="resolveTicket('${ticket.id}')"
+              >
+                Resolve
+              </button>
+            `
+
+            : ""
+          }
+
+          <button
+            onclick="deleteTicket('${ticket.id}')"
+          >
+            Delete
+          </button>
+
+        </div>
 
       </div>
     `;
@@ -165,9 +191,28 @@ async function addOffense() {
 
   if (!name || !days) return;
 
+  const res =
+    await fetch(
+      API + "/offenses"
+    );
+
+  let offenses =
+    await res.json();
+
+  offenses.push({
+
+    id:
+      crypto.randomUUID(),
+
+    name,
+    days
+
+  });
+
   await fetch(
-    API + "/offenses",
+    API + "/saveOffenses",
     {
+
       method: "POST",
 
       headers: {
@@ -175,10 +220,105 @@ async function addOffense() {
           "application/json"
       },
 
-      body: JSON.stringify({
-        name,
-        days
-      })
+      body:
+        JSON.stringify(
+          offenses
+        )
+
+    }
+  );
+
+  loadOffenses();
+
+}
+
+async function editOffense(id) {
+
+  const res =
+    await fetch(
+      API + "/offenses"
+    );
+
+  let offenses =
+    await res.json();
+
+  const offense =
+    offenses.find(
+      o => o.id === id
+    );
+
+  const newName =
+    prompt(
+      "Edit offense name",
+      offense.name
+    );
+
+  const newDays =
+    prompt(
+      "Edit days",
+      offense.days
+    );
+
+  offense.name =
+    newName;
+
+  offense.days =
+    newDays;
+
+  await fetch(
+    API + "/saveOffenses",
+    {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type":
+          "application/json"
+      },
+
+      body:
+        JSON.stringify(
+          offenses
+        )
+
+    }
+  );
+
+  loadOffenses();
+
+}
+
+async function deleteOffense(id) {
+
+  const res =
+    await fetch(
+      API + "/offenses"
+    );
+
+  let offenses =
+    await res.json();
+
+  offenses =
+    offenses.filter(
+      o => o.id !== id
+    );
+
+  await fetch(
+    API + "/saveOffenses",
+    {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type":
+          "application/json"
+      },
+
+      body:
+        JSON.stringify(
+          offenses
+        )
+
     }
   );
 
@@ -188,9 +328,40 @@ async function addOffense() {
 
 async function createTicket() {
 
+  const res =
+    await fetch(
+      API + "/tickets"
+    );
+
+  let tickets =
+    await res.json();
+
+  tickets.push({
+
+    id:
+      crypto.randomUUID(),
+
+    offense:
+      ticketOffense.value,
+
+    notes:
+      ticketNotes.value,
+
+    status:
+      "Active",
+
+    createdAt:
+      Date.now(),
+
+    expiresInDays:
+      ticketDays.value
+
+  });
+
   await fetch(
-    API + "/tickets",
+    API + "/saveTickets",
     {
+
       method: "POST",
 
       headers: {
@@ -198,27 +369,17 @@ async function createTicket() {
           "application/json"
       },
 
-      body: JSON.stringify({
+      body:
+        JSON.stringify(
+          tickets
+        )
 
-        offense:
-          ticketOffense.value,
-
-        notes:
-          ticketNotes.value,
-
-        expiresInDays:
-          ticketDays.value
-
-      })
     }
   );
 
   modal.classList.add(
     "hidden"
   );
-
-  ticketNotes.value = "";
-  ticketDays.value = "";
 
   loadTickets();
 
@@ -237,9 +398,13 @@ async function resolveTicket(id) {
   tickets =
     tickets.map((ticket) => {
 
-      if (ticket.id === id) {
+      if (
+        ticket.id === id
+      ) {
+
         ticket.status =
           "Resolved";
+
       }
 
       return ticket;
@@ -249,6 +414,7 @@ async function resolveTicket(id) {
   await fetch(
     API + "/saveTickets",
     {
+
       method: "POST",
 
       headers: {
@@ -256,9 +422,49 @@ async function resolveTicket(id) {
           "application/json"
       },
 
-      body: JSON.stringify(
-        tickets
-      )
+      body:
+        JSON.stringify(
+          tickets
+        )
+
+    }
+  );
+
+  loadTickets();
+
+}
+
+async function deleteTicket(id) {
+
+  const res =
+    await fetch(
+      API + "/tickets"
+    );
+
+  let tickets =
+    await res.json();
+
+  tickets =
+    tickets.filter(
+      t => t.id !== id
+    );
+
+  await fetch(
+    API + "/saveTickets",
+    {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type":
+          "application/json"
+      },
+
+      body:
+        JSON.stringify(
+          tickets
+        )
+
     }
   );
 
